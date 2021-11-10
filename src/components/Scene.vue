@@ -28,12 +28,19 @@
 
 
 <script>
+import * as math from 'mathjs'
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 import { CSS2DRenderer, CSS2DObject } from 'three/examples/jsm/renderers/CSS2DRenderer.js';
 export default {
+    props:{
+        selectedFields: Array,
+        selectedName: Array,
+        json: Array,
+    },
     data()  {
         return{
+            new_json: [],
         }
     },
     mounted(){
@@ -43,13 +50,65 @@ export default {
         initialize: function(){
             let camera, scene, renderer, labelRenderer;
 var spheres = [];
-const TORUS_RADIUS = 12;
 const SPHERE_RADIUS = 0.27;
 
 const clock = new THREE.Clock();
 const textureLoader = new THREE.TextureLoader();
 
-let sphere,torus;
+let sphere;
+
+
+/////////////////Algorythm////////////////////
+
+var temp_json = [
+]
+//optimize this later
+this.json.forEach((key,item) => {
+   var new_object = {
+       name: "herrington",
+       fields: []
+   };
+   this.selectedFields.forEach((item) => {
+       new_object.fields.push(key[item])
+   })
+   temp_json.push(new_object);
+})
+
+
+let mean = [];
+let std = [];
+var new_f = [];
+temp_json.forEach(item => {
+    mean.push(math.mean(item.fields));
+    std.push(math.std(item.fields));
+    var temp = [];
+    for(let i = 0; i<this.selectedFields.length; i++){
+        temp.push((item.fields[i]-math.mean(item.fields))/math.std(item.fields));
+    }
+    new_f.push(temp);
+})
+
+var covariance_matrix = [];
+for(let i = 0;i < new_f.length;i++)
+{
+    covariance_matrix[i] = new Array(new_f.length);
+    let imean = math.mean(new_f[i])
+    for(let j = 0; j < new_f.length; j++){
+        let temp = 0;
+        let jmean = math.mean(new_f[j])
+        for(let g = 0; g < this.selectedFields.length; g++){
+            temp += (new_f[i][g] - imean) * (new_f[j][g] - jmean);
+        }
+        covariance_matrix[i][j] = temp/this.selectedFields.length;
+    }
+}
+
+var temp = math.eigs(covariance_matrix);
+temp = temp.vectors;
+
+var data = math.multiply(math.transpose(temp),new_f);
+
+/////////////////Algorythm////////////////////
 
 init();
 animate();
@@ -71,25 +130,12 @@ function init() {
     const gridHelper = new THREE.GridHelper(200,50);
     scene.add(lightHelper, gridHelper);
 
-    //sceneBackground = new THREE.TextureLoader().load('test2.jpg');
-    //scene.background = sceneBackground;
-    //donut
-    const geometry2 = new THREE.TorusGeometry(10,3,16,100)
-    const material2 = new THREE.MeshStandardMaterial( { color: 0xFF6347});
-    torus = new THREE.Mesh (geometry2, material2);
-    scene.add(torus)
-    //test for donut
-    const torusDiv = document.createElement( 'div' );
-    torusDiv.className = 'label';
-    torusDiv.textContent = 'Torus';
-    torusDiv.style.marginTop = '-1em';
-    const torusLabel = new CSS2DObject( torusDiv );
-    torusLabel.position.set( 5, TORUS_RADIUS, 0 );
-    torus.add( torusLabel );
     //
 
-    Array(10).fill().forEach(createSphere)
-
+    //Array(10).fill().forEach(createSphere)
+    data.forEach(item => {
+        createSphere(item[0], item[1], item[2])
+    })
     renderer = new THREE.WebGLRenderer();
     renderer.setPixelRatio( window.devicePixelRatio );
     renderer.setSize( window.innerWidth, window.innerHeight-80);
@@ -125,12 +171,13 @@ function onWindowResize() {
 
 }
 
-function createSphere(){
+function createSphere(x,y,z){
     //create new sphere
     const geometry = new THREE.SphereGeometry( 0.5, 20, 24);
     const material = new THREE.MeshBasicMaterial( { color: 0xFF0000 } );
     sphere = new THREE.Mesh( geometry, material );
-    const [x,y,z] = Array(3).fill().map(() => THREE.MathUtils.randFloatSpread(100));
+    //const [rx,ry,rz] = Array(3).fill().map(() => THREE.MathUtils.randFloatSpread(2));
+    //console.log( "x =", x, "y = ", y, "z = ", z)
     sphere.position.set(x,y,z);
     scene.add(sphere)
     //text for Sphere
@@ -155,7 +202,6 @@ function animate() {
     //     item.position.y += 0.05
     // })
 
-    torus.rotation.x += 0.01;
     renderer.render( scene, camera );
     labelRenderer.render( scene, camera );
 
