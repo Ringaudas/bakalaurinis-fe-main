@@ -28,7 +28,8 @@
 
 
 <script>
-import * as math from 'mathjs'
+import * as PCA from 'pca-js';
+import * as math from 'mathjs';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 import { CSS2DRenderer, CSS2DObject } from 'three/examples/jsm/renderers/CSS2DRenderer.js';
@@ -48,7 +49,8 @@ export default {
     },
     methods:{
         initialize: function(){
-            let camera, scene, renderer, labelRenderer;
+
+let camera, scene, renderer, labelRenderer;
 var spheres = [];
 const SPHERE_RADIUS = 0.27;
 
@@ -65,15 +67,15 @@ var temp_json = [
 //optimize this later
 this.json.forEach((key,item) => {
    var new_object = {
-       name: "herrington",
+       name: "",
        fields: []
    };
    this.selectedFields.forEach((item) => {
        new_object.fields.push(key[item])
+       new_object.name = key[this.selectedName[0]]
    })
    temp_json.push(new_object);
 })
-
 
 let mean = [];
 let std = [];
@@ -87,8 +89,10 @@ temp_json.forEach(item => {
     }
     new_f.push(temp);
 })
-
+const arr2D = new_f.values('fields');
+console.log(arr2D)
 var covariance_matrix = [];
+
 for(let i = 0;i < new_f.length;i++)
 {
     covariance_matrix[i] = new Array(new_f.length);
@@ -102,13 +106,17 @@ for(let i = 0;i < new_f.length;i++)
         covariance_matrix[i][j] = temp/this.selectedFields.length;
     }
 }
-
 var temp = math.eigs(covariance_matrix);
 temp = temp.vectors;
+//console.log(new_f)
 
-var data = math.multiply(math.transpose(temp),new_f);
+var data = [[40,50,60],[50,70,60],[80,70,90],[50,60,80]];
+var vectors = PCA.getEigenVectors(data);
+console.log(vectors)
+var data = math.multiply(temp,new_f);
 
-/////////////////Algorythm////////////////////
+//console.log(data)
+/////////////////Algorythm///////////////////
 
 init();
 animate();
@@ -130,11 +138,15 @@ function init() {
     const gridHelper = new THREE.GridHelper(200,50);
     scene.add(lightHelper, gridHelper);
 
+
     //
 
-    //Array(10).fill().forEach(createSphere)
+    //Array(50).fill().forEach(createSphere)
+
+    let counter = 0;
     data.forEach(item => {
-        createSphere(item[0], item[1], item[2])
+        createSphere(item[0], item[1], item[2], counter)
+        counter++;
     })
     renderer = new THREE.WebGLRenderer();
     renderer.setPixelRatio( window.devicePixelRatio );
@@ -149,9 +161,9 @@ function init() {
 
 
     const controls = new OrbitControls( camera, labelRenderer.domElement );
-    controls.minDistance = 5;
-    controls.maxDistance = 100;
-
+    controls.minDistance = 1;
+    controls.maxDistance = 50;
+    controls.autoRotate = true;
     //
 
     window.addEventListener( 'resize', onWindowResize );
@@ -171,22 +183,22 @@ function onWindowResize() {
 
 }
 
-function createSphere(x,y,z){
+
+function createSphere(x,y,z,index){
     //create new sphere
-    const geometry = new THREE.SphereGeometry( 0.5, 20, 24);
+    const geometry = new THREE.SphereGeometry( 0.05, 10, 16);
     const material = new THREE.MeshBasicMaterial( { color: 0xFF0000 } );
     sphere = new THREE.Mesh( geometry, material );
-    //const [rx,ry,rz] = Array(3).fill().map(() => THREE.MathUtils.randFloatSpread(2));
-    //console.log( "x =", x, "y = ", y, "z = ", z)
+    //const [x,y,z] = Array(3).fill().map(() => THREE.MathUtils.randFloatSpread(100))
     sphere.position.set(x,y,z);
     scene.add(sphere)
     //text for Sphere
     const sphereDiv = document.createElement( 'div' );
     sphereDiv.className = 'label';
-    sphereDiv.textContent = 'Sphere';
+    sphereDiv.textContent = temp_json[index]['name'];
     sphereDiv.style.marginTop = '-1em';
     const sphereLabel = new CSS2DObject( sphereDiv );
-    sphereLabel.position.set( 0, SPHERE_RADIUS, 0 );
+    sphereLabel.position.set( 0, SPHERE_RADIUS-0.2, 0 );
     sphere.add( sphereLabel );
     spheres.push(sphere);
 }
@@ -201,7 +213,6 @@ function animate() {
     // spheres.forEach(function(item, index, array) {
     //     item.position.y += 0.05
     // })
-
     renderer.render( scene, camera );
     labelRenderer.render( scene, camera );
 

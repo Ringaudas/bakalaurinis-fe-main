@@ -93,7 +93,9 @@
 
 
 <script>
+import * as math from 'mathjs'
 import Canvas from './Scene.vue';
+import { forEach } from 'mathjs';
 
   export default {
     components:{
@@ -136,6 +138,41 @@ import Canvas from './Scene.vue';
                 reader.readAsText(item);
             })
         },
+        normalizeData(){
+            var values = [];
+
+            this.selectedFields.forEach(item => {
+                var temp = {
+                    [item]: []
+                }
+                values.push(temp)
+            })
+
+            this.new_json.forEach(obj => {
+                for(let i = 0; i<this.selectedFields.length;i++){
+                    values[i][this.selectedFields[i]].push(obj[this.selectedFields[i]]);
+                }
+            })
+            //Normalize data
+            //min range
+            let a = 1
+            //max range
+            let b = 10
+            console.log(values)
+            for(let i = 0; i<this.selectedFields.length;i++){
+                let max = math.max(values[i][this.selectedFields[i]])
+                let min = math.min(values[i][this.selectedFields[i]])
+                values[i][this.selectedFields[i]].forEach(function(value, key, array){
+                    array[key] = a+(((value-min)*(b-a))/(max-min))
+                })
+            }
+
+            values.forEach((item, key) => {
+                for(let i = 0; i < this.new_json.length; i++){
+                    this.new_json[i][this.selectedFields[key]] = item[this.selectedFields[key]][i];
+                }
+            })
+        },
         filterByName(){
             this.temp_json = JSON.parse(this.json)
             var list = [];
@@ -143,17 +180,22 @@ import Canvas from './Scene.vue';
             list.push("Kiribati");
             list.push("Palau");
             list.push("Summer Olympics 2020");
+
             this.temp_json.forEach(item => {
                 if(!list.includes(item.Country_Region)){
                     list.push(item.Country_Region)
                     this.new_json.push(item)
                 }
             })
+
+            //var max = math.max(this.new_json)
+            //console.log(this.new_json[0]['Active'])
         },
         handleSubmit(){
             //filtering json by name to get rid of duplicates (too many records)
             this.filterByName()
-            this.showCanvas = true;
+            this.normalizeData()
+            //this.showCanvas = true;
         }
 
     }
