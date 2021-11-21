@@ -30,20 +30,33 @@
                     label="Select json files"
                     prepend-icon="mdi-paperclip"
                 ></v-file-input>
-                <v-btn
-                class="ma-2"
-                :loading="loading4"
-                :disabled="loading4"
-                color="info"
-                v-on:click="handleNext()"
-            >
-                Next
-                <template v-slot:loader>
-                    <span class="custom-loader">
-                        <v-icon light>mdi-cached</v-icon>
-                    </span>
-                </template>
-            </v-btn>
+                <v-row>
+                    <v-col cols="6" >
+                        <v-btn
+                            :loading="loading4"
+                            :disabled="loading4"
+                            color="info"
+                            v-on:click="handleNext()"
+                        >
+                        Next
+                        <template v-slot:loader>
+                            <span class="custom-loader">
+                                <v-icon light>mdi-cached</v-icon>
+                            </span>
+                        </template>
+                        </v-btn>
+                    </v-col>
+
+                    <v-col align="end">
+                        <v-btn elevation="2" v-on:click="handleDemo()">
+                            Demo version
+                        </v-btn>
+                    </v-col>
+
+                </v-row>
+
+
+
             </v-card-text>
             
         </v-card>
@@ -86,7 +99,7 @@
         <Canvas v-if="showCanvas"
             :selectedFields="selectedFields"
             :selectedName="selectedName"
-            :json="new_json"
+            :json="json"
         />
     </v-row>
 </template>
@@ -108,7 +121,7 @@ import { forEach } from 'mathjs';
         jsonFields: [],
         showFields: false,
         showCanvas: false,
-        json: '',
+        json: [],
         new_json: [],
         files: [],
         loader: null,
@@ -116,6 +129,31 @@ import { forEach } from 'mathjs';
       }
     },
     methods:{
+        handleDemo(){
+            //adding parameters
+            this.selectedFields.push('Confirmed');
+            this.selectedFields.push('Active');
+            this.selectedFields.push('Deaths');
+            this.selectedFields.push('Recovered');
+
+            //add a name parameter
+            this.selectedName.push('Country_Region');
+
+            let vue = this;
+            this.json.push(require('../assets/corona1.json'))
+            this.json.push(require('../assets/corona2.json'))
+            this.json.push(require('../assets/corona3.json'))
+            //filter
+            this.json.forEach(function(item,index,array) {
+                array[index] = vue.filterByName(item)
+            })
+            //normalize
+            this.json.forEach(function(item,index,array) {
+                array[index] = vue.normalizeData(item)
+            })
+            //activate Canvas
+            this.showCanvas = true;
+        },
         handleNext() {
             var counter = 0;    
             //assigning vue component so i can use it in reader.onload (this is overriden)
@@ -138,63 +176,115 @@ import { forEach } from 'mathjs';
                 reader.readAsText(item);
             })
         },
-        normalizeData(){
-            var values = [];
-
-            this.selectedFields.forEach(item => {
-                var temp = {
-                    [item]: []
-                }
-                values.push(temp)
-            })
-
-            this.new_json.forEach(obj => {
+        normalizeData(json){
+            var pop_json = require('../assets/country-by-population.json')
+            var f =  [];
+            let vue = this;
+            json.forEach((obj,key) => {
+                f.push([]);
                 for(let i = 0; i<this.selectedFields.length;i++){
-                    values[i][this.selectedFields[i]].push(obj[this.selectedFields[i]]);
+                    pop_json.filter(country => {
+                        if(obj['Country_Region'] == country.country){
+                            f[key].push(obj[this.selectedFields[i]]/country.population);
+                        }
+                    })
                 }
             })
             //Normalize data
             //min range
-            let a = 1
+            //let a = 0
             //max range
-            let b = 10
-            console.log(values)
-            for(let i = 0; i<this.selectedFields.length;i++){
-                let max = math.max(values[i][this.selectedFields[i]])
-                let min = math.min(values[i][this.selectedFields[i]])
-                values[i][this.selectedFields[i]].forEach(function(value, key, array){
-                    array[key] = a+(((value-min)*(b-a))/(max-min))
+            //let b = 1
+            //get populations of all countries
+            // for(let i = 0; i<this.selectedFields.length;i++){
+            //     let max = math.max(values[i][this.selectedFields[i]])
+            //     let min = math.min(values[i][this.selectedFields[i]])
+            //     values[i][this.selectedFields[i]].forEach(function(value, key, array){
+            //         array[key] = a+(((value-min)*(b-a))/(max-min))
+            // })
+            // }
+            json.forEach(function(obj,key,array){
+                vue.selectedFields.forEach((item,index) => {
+                    array[key][item] = f[key][index];
                 })
-            }
-
-            values.forEach((item, key) => {
-                for(let i = 0; i < this.new_json.length; i++){
-                    this.new_json[i][this.selectedFields[key]] = item[this.selectedFields[key]][i];
-                }
             })
+            return json;
         },
-        filterByName(){
-            this.temp_json = JSON.parse(this.json)
+        filterByName(json){
+            var temp_json = [];
             var list = [];
-            //Continents which have 0 covid data
+            //Continents which have 0 covid data or are incompatible with country population json file
             list.push("Kiribati");
             list.push("Palau");
             list.push("Summer Olympics 2020");
+            list.push("Burma");
+            list.push("Cabo Verde");
+            list.push("Congo (Brazzaville)");
+            list.push("Congo (Kinshasa)");
+            list.push("Cote d'Ivoire");
+            list.push("Czechia");
+            list.push("Diamond Princess");
+            list.push("Eswatini");
+            list.push("Fiji");
+            list.push("Holy See");
+            list.push("Korea, South");
+            list.push("Kosovo");
+            list.push("Libya");
+            list.push("MS Zaandam");
+            list.push("Taiwan*");
+            list.push("Timor-Leste");
+            list.push("West Bank and Gaza");
+            list.push("Tonga")
 
-            this.temp_json.forEach(item => {
+            let obj_amount = [];
+            json.forEach(item => {
                 if(!list.includes(item.Country_Region)){
-                    list.push(item.Country_Region)
-                    this.new_json.push(item)
+                    let country_exists = false;
+                    temp_json.forEach((country,key,array) => {
+                        if(country.Country_Region == item.Country_Region) {                             
+                            array[key]['Confirmed'] += item.Confirmed;
+                            array[key]['Deaths'] += item.Deaths;
+                            array[key]['Recovered'] += item.Recovered;
+                            array[key]['Active'] += item.Active;
+                            array[key]['Incident_Rate'] += math.round(item.Incident_Rate);
+                            array[key]['Case_Fatality_Ratio'] += math.round(item.Case_Fatality_Ratio);
+                            obj_amount.forEach((obj,key,array) => {
+                                if(obj.Country_Region == country.Country_Region){
+                                    array[key]['Amount']++;
+                                }
+                                    
+                            })
+                            country_exists = true;
+                        }
+                    })
+                    if(!country_exists){
+                        temp_json.push(item)
+                        obj_amount.push({
+                            Country_Region: item.Country_Region,
+                            Amount: 1
+                        })
+                    }
+
+                    //temp_json.push(item)
                 }
             })
 
+            temp_json.forEach((obj,key,array) => {
+                obj_amount.forEach(item => {
+                    if(item.Country_Region == obj.Country_Region){
+                        array[key]['Incident_Rate'] /= item.Amount;
+                        array[key]['Case_Fatality_Ratio'] /= item.Amount;
+                    }
+                                    
+                })
+            })
+
+            return temp_json;
             //var max = math.max(this.new_json)
             //console.log(this.new_json[0]['Active'])
         },
         handleSubmit(){
             //filtering json by name to get rid of duplicates (too many records)
-            this.filterByName()
-            this.normalizeData()
             //this.showCanvas = true;
         }
 
