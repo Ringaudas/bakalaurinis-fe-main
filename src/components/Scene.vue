@@ -5,21 +5,106 @@
         </div>
         <div class="footer footer-image" id="footer">
         <nav class="container-fluid" style="height:80px;">
-            <div class="row">
-                <div class="col">
+            <v-row>
+                <v-col cols="auto">
                     <br>
                     <a class="navbar-brand" href="#">Navigation Bar</a>
-                </div>
-                <div class="col-5">
-                    <label for="customRange2 " class="form-label">Example range</label>
-                    <input v-model="currentDay" type="range" class="form-range" min="1" v-bind:max="max"  id="customRange2" @change="changeDay">
-                </div>
-                <div class="col">
+                </v-col>
+                <v-col cols="cols-6">
                     <br>
-                    <button type="button" class="btn btn-primary" data-toggle="modal" data-target=".bd-import-modal-lg" style="background: transparent;">Menu</button>
-                    <button type="button" class="btn btn-primary" data-toggle="modal" data-target=".bd-subject-modal-lg" style="background: transparent;">Subjects</button>  
-                </div>
-            </div>
+                    <input v-model="currentDay" type="range" class="form-range" min="1" v-bind:max="max"  id="customRange2">
+                </v-col>
+                <v-col cols="auto">
+                    <br>
+                    <v-dialog
+                        transition="dialog-top-transition"
+                        max-width="300"
+                        >
+                        <template v-slot:activator="{ on, attrs }">
+                            <v-btn
+                                color="primary"
+                                v-bind="attrs"
+                                v-on="on"
+                                small
+                            >Parameters</v-btn>
+                        </template>
+                        <template v-slot:default="dialog">
+                            <v-card>
+                                <v-toolbar
+                                color="primary"
+                                dark
+                                >
+                                <v-row>
+                                    <v-col cols="4">
+                                        <v-btn block @click="xMenu = true, yMenu = false, zMenu = false" color="success">
+                                            X
+                                        </v-btn>
+                                    </v-col>
+                                    <v-col cols="4">
+                                        <v-btn block @click="xMenu = false, yMenu = true, zMenu = false" color="success">
+                                            Y
+                                        </v-btn>
+                                    </v-col>
+                                    <v-col cols="4">
+                                        <v-btn block @click="xMenu = false, yMenu = false, zMenu = true" color="success">
+                                            Z
+                                        </v-btn>
+                                    </v-col>
+                                </v-row>
+                                </v-toolbar>
+                                <v-card-text v-if="xMenu">
+                                    <div v-for="(item,index) in selectedFields"
+                                        :key="index">
+                                        <v-switch
+                                            :label="item"
+                                            color="primary"
+                                            :input-value="index == xAxis ? true: false"
+                                            @change="xAxisChange(index)"
+                                            :disabled="index == xAxis || index == yAxis || index == zAxis? true : false"
+                                        ></v-switch>
+                                    </div>
+                                </v-card-text>
+                                <v-card-text v-if="yMenu">
+                                    <div v-for="(item,index) in selectedFields"
+                                        :key="index">
+                                        <v-switch
+                                            :label="item"
+                                            color="primary"
+                                            :input-value="index == yAxis ? true: false"
+                                            @change="yAxisChange(index)"
+                                            :disabled="index == xAxis || index == yAxis || index == zAxis? true : false"
+                                        ></v-switch>
+                                    </div>
+                                </v-card-text>
+                                <v-card-text v-if="zMenu">
+                                    <div v-for="(item,index) in selectedFields"
+                                        :key="index">
+                                        <v-switch
+                                            :label="item"
+                                            color="primary"
+                                            :input-value="index == zAxis ? true: false"
+                                            @change="zAxisChange(index)"
+                                            :disabled="index == xAxis || index == yAxis || index == zAxis? true : false"
+                                        ></v-switch>
+                                    </div>
+                                </v-card-text>
+                                <v-card-actions class="justify-end">
+                                <v-btn
+                                    text
+                                    @click="dialog.value = false"
+                                >Close</v-btn>
+                                </v-card-actions>
+                            </v-card>
+                        </template>
+                    </v-dialog>
+                </v-col> 
+                <v-col cols="auto">
+                    <br>
+                    <v-btn color="primary" small>
+                        Menu
+                    </v-btn>
+                </v-col>
+            </v-row>
         </nav>
       </div>
     <div id="info" v-if="info_box">
@@ -30,18 +115,17 @@
         max-width="400"
         
     >
-        <v-card-title>
+
         <v-row>
-            <v-col align="end">
-                <v-btn @click="info_box = !info_box">
+            <v-col align="end" style="padding-top:0;padding-bottom:0;">
+                <v-btn @click="info_box = !info_box" x-small>
                     <v-icon>mdi-close</v-icon>
                 </v-btn>
             </v-col>
         </v-row>
-        </v-card-title>
 
-        <v-card-text class="font-weight-bold" style="font-size:12px;">
-        <v-col>
+        <v-card-text class="font-weight-bold" style="font-size:12px; padding-bottom:0; padding-left:0;">
+        <v-col style="padding:0;">
             <ul id="example-1">
                 <li v-for="(item, index) in object_info" :key="item['Conmbined_Key']">
                     {{ index }}: {{item}}
@@ -57,17 +141,18 @@
 
 
 <script>
-import * as TWEEN from '@tweenjs/tween.js';
 import * as math from 'mathjs';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 import { CSS2DRenderer, CSS2DObject } from 'three/examples/jsm/renderers/CSS2DRenderer.js';
+import OrientationGizmo from "../assets/OrientationGizmo.js";
 
 export default {
     props:{
         selectedFields: Array,
         selectedName: Array,
         json: Array,
+        original_json: Array
     },
     data()  {
         return{
@@ -78,17 +163,34 @@ export default {
             info_box: false,
             max: '',
             currentDay: 1,
+            lastInfoIndex: 1,
+            CheckForUpdate: false,
+            xMenu: false,
+            yMenu: false,
+            zMenu: false,
+            xAxis: 0,
+            yAxis: 1,
+            zAxis: 2,
         }
     },
     mounted(){
         this.initialize()
     },
     methods:{
-        changeDay: function(){
-            console.log(this.currentDay);
+        xAxisChange: function(parameter){
+            this.xAxis = parameter;
+            this.CheckForUpdate = true;
+        },
+        yAxisChange: function(parameter){
+            this.yAxis = parameter;
+            this.CheckForUpdate = true;
+        },
+        zAxisChange: function(parameter){
+            this.zAxis = parameter;
+            this.CheckForUpdate = true;
         },
         initialize: function(){
-            let camera, scene, renderer, labelRenderer;
+            let camera, scene, renderer, labelRenderer, orientationGizmo;
             let vue = this;
             let last_id, RequiredTimePassed = 0;
             var spheres = [];
@@ -98,6 +200,7 @@ export default {
             const textureLoader = new THREE.TextureLoader();
             const raycaster = new THREE.Raycaster();
             const mouse = new THREE.Vector2();
+            var quaternion = new THREE.Quaternion;
             let sphere;
             let previousDay = 1;
 
@@ -185,8 +288,15 @@ export default {
                 let canvas = document.getElementById("canvas");
                 camera = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, 0.1, 200 );
                 camera.position.set( 10, 5, 20 );
+
+
                 scene = new THREE.Scene();
 
+                
+
+                //oriantation gizmo
+                orientationGizmo = new OrientationGizmo(camera, { size: 100, padding: 8 });
+                document.body.appendChild(orientationGizmo);
 
                 //lightning
                 const pointLight = new THREE.PointLight(0xffffff)
@@ -254,8 +364,9 @@ export default {
 
             }
 
+
             function setNewInfo(index){
-                vue.object_info = vue.json[0][index]
+                vue.object_info = vue.original_json[vue.currentDay-1][index]
             }
 
 
@@ -275,7 +386,7 @@ export default {
                 sphereDiv.style.marginTop = '-1em';
                 const sphereLabel = new CSS2DObject( sphereDiv );
                 sphereLabel.position.set( 0, SPHERE_RADIUS-0.2, 0 );
-                sphere.add( sphereLabel );
+                sphere.add( sphereLabel);
                 spheres.push(sphere);
             }
 
@@ -284,7 +395,10 @@ export default {
                 const elapsed = clock.getElapsedTime();
                 raycaster.setFromCamera( mouse, camera );
                 // calculate objects intersecting the picking ray
-                const intersects = raycaster.intersectObjects( scene.children );
+
+                orientationGizmo.update();
+                
+                const intersects = raycaster.intersectObjects( scene.children );    
                 if(intersects.length > 0){
                         intersects[ 0 ].object.material.color.set( 0xd5eb34 );
                         vue.info_box = true;
@@ -294,6 +408,7 @@ export default {
                             
                             if(intersects[0].object == object && last_id != key && !keys_list.includes(key) && tempTime >= 1)
                             {
+                                vue.lastInfoIndex = key;
                                 setNewInfo(key);
                                 last_id = key;
                                 keys_list.push(key);
@@ -302,28 +417,29 @@ export default {
                         })
                 }
 
-
                 requestAnimationFrame( animate );
                 window.addEventListener( 'click', onMouseMove, true);
 
-                if( vue.currentDay != previousDay){
+                if( vue.currentDay != previousDay || vue.CheckForUpdate == true){
                     changeDay(vue.currentDay)
                     previousDay = vue.currentDay;
+                    vue.CheckForUpdate = false;
                 }
+
+                renderer.render( scene, camera );
+                labelRenderer.render( scene, camera );
 
                 // spheres.forEach(function(item, index, array) {
                 //     item.position.y += 0.05
-                // })
-                renderer.render( scene, camera );
-                labelRenderer.render( scene, camera );
+                // }) 
 
             }
 
             function changeDay(index){
                 spheres.forEach((sphere,key,array) =>{
-                    array[key].position.set(coordinates[index-1][key][0],coordinates[index-1][key][1],coordinates[index-1][key][2])
-;
+                    array[key].position.set(coordinates[index-1][key][vue.xAxis],coordinates[index-1][key][vue.yAxis],coordinates[index-1][key][vue.zAxis])
                 })
+                setNewInfo(vue.lastInfoIndex)
             }
         }
     }
@@ -332,6 +448,11 @@ export default {
 </script>
 
 <style>
+orientation-gizmo:hover {
+    background: rgba(255, 255, 255, .2);
+    border-radius: 100%;
+    cursor: pointer;
+}
 canvas{
     position: fixed;
     top: 0;
@@ -370,6 +491,7 @@ canvas{
     color: white;
     position:absolute;
     top:0;
+    right:0;
 }
 .btn-primary{
     margin-left:5px;
