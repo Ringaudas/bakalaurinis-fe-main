@@ -31,7 +31,7 @@
                     prepend-icon="mdi-paperclip"
                 ></v-file-input>
                 <v-row>
-                    <v-col cols="6" >
+                    <v-col cols="4" >
                         <v-btn
                             :loading="loading4"
                             :disabled="loading4"
@@ -47,7 +47,7 @@
                         </v-btn>
                     </v-col>
 
-                    <v-col align="end">
+                    <v-col cols="8" align="end">
                         <v-btn elevation="2" v-on:click="handleDemo()">
                             Demo version
                         </v-btn>
@@ -100,6 +100,7 @@
             :selectedFields="selectedFields"
             :selectedName="selectedName"
             :json="json"
+            :original_json="original_json"
         />
     </v-row>
 </template>
@@ -122,7 +123,7 @@ import { forEach } from 'mathjs';
         showFields: false,
         showCanvas: false,
         json: [],
-        new_json: [],
+        original_json: [],
         files: [],
         loader: null,
         loading4: false,
@@ -145,12 +146,17 @@ import { forEach } from 'mathjs';
             this.json.push(require('../assets/corona3.json'))
             //filter
             this.json.forEach(function(item,index,array) {
-                array[index] = vue.filterByName(item)
+                array[index] = vue.filterData(item)
             })
+            this.original_json = JSON.parse(JSON.stringify(this.json))
             //normalize
             this.json.forEach(function(item,index,array) {
                 array[index] = vue.normalizeData(item)
             })
+
+            //adding two new parameters which didnt need normalization
+            this.selectedFields.push('Incident_Rate');
+            this.selectedFields.push('Case_Fatality_Ratio');
             //activate Canvas
             this.showCanvas = true;
         },
@@ -210,7 +216,7 @@ import { forEach } from 'mathjs';
             })
             return json;
         },
-        filterByName(json){
+        filterData(json){
             var temp_json = [];
             var list = [];
             //Continents which have 0 covid data or are incompatible with country population json file
@@ -237,11 +243,11 @@ import { forEach } from 'mathjs';
             list.push("Tonga")
 
             let obj_amount = [];
-            json.forEach(item => {
-                if(!list.includes(item.Country_Region)){
+            json.forEach((item,index,Array) => {
+                if(!list.includes(item.Country_Region) && !list.includes(item.Province_State)){
                     let country_exists = false;
                     temp_json.forEach((country,key,array) => {
-                        if(country.Country_Region == item.Country_Region) {                             
+                        if(country.Country_Region == item.Country_Region) {                     
                             array[key]['Confirmed'] += item.Confirmed;
                             array[key]['Deaths'] += item.Deaths;
                             array[key]['Recovered'] += item.Recovered;
@@ -280,8 +286,6 @@ import { forEach } from 'mathjs';
             })
 
             return temp_json;
-            //var max = math.max(this.new_json)
-            //console.log(this.new_json[0]['Active'])
         },
         handleSubmit(){
             //filtering json by name to get rid of duplicates (too many records)
