@@ -141,9 +141,37 @@ import { forEach } from 'mathjs';
             this.selectedName.push('Country_Region');
 
             let vue = this;
-            this.json.push(require('../assets/corona1.json'))
-            this.json.push(require('../assets/corona2.json'))
-            this.json.push(require('../assets/corona3.json'))
+            this.json.push(require('../assets/2021-01-01.json'))
+            this.json.push(require('../assets/2021-01-02.json'))
+            this.json.push(require('../assets/2021-01-03.json'))
+            this.json.push(require('../assets/2021-01-04.json'))
+            this.json.push(require('../assets/2021-01-05.json'))
+            this.json.push(require('../assets/2021-01-06.json'))
+            this.json.push(require('../assets/2021-01-07.json'))
+            this.json.push(require('../assets/2021-01-08.json'))
+            this.json.push(require('../assets/2021-01-09.json'))
+            this.json.push(require('../assets/2021-01-10.json'))
+            this.json.push(require('../assets/2021-01-11.json'))
+            this.json.push(require('../assets/2021-01-12.json'))
+            this.json.push(require('../assets/2021-01-13.json'))
+            this.json.push(require('../assets/2021-01-14.json'))
+            this.json.push(require('../assets/2021-01-15.json'))
+            this.json.push(require('../assets/2021-01-16.json'))
+            this.json.push(require('../assets/2021-01-17.json'))
+            this.json.push(require('../assets/2021-01-18.json'))
+            this.json.push(require('../assets/2021-01-19.json'))
+            this.json.push(require('../assets/2021-01-20.json'))
+            this.json.push(require('../assets/2021-01-21.json'))
+            this.json.push(require('../assets/2021-01-22.json'))
+            this.json.push(require('../assets/2021-01-23.json'))
+            this.json.push(require('../assets/2021-01-24.json'))
+            this.json.push(require('../assets/2021-01-25.json'))
+            this.json.push(require('../assets/2021-01-26.json'))
+            this.json.push(require('../assets/2021-01-27.json'))
+            this.json.push(require('../assets/2021-01-28.json'))
+            this.json.push(require('../assets/2021-01-29.json'))
+            this.json.push(require('../assets/2021-01-30.json'))
+            this.json.push(require('../assets/2021-01-31.json'))
             //filter
             this.json.forEach(function(item,index,array) {
                 array[index] = vue.filterData(item)
@@ -184,14 +212,14 @@ import { forEach } from 'mathjs';
         },
         normalizeData(json){
             var pop_json = require('../assets/country-by-population.json')
-            var f =  [];
             let vue = this;
+            var f =  [];
             json.forEach((obj,key) => {
                 f.push([]);
                 for(let i = 0; i<this.selectedFields.length;i++){
                     pop_json.filter(country => {
                         if(obj['Country_Region'] == country.country){
-                            f[key].push(obj[this.selectedFields[i]]/country.population);
+                            f[key].push((obj[this.selectedFields[i]]/country.population)*100000);
                         }
                     })
                 }
@@ -241,7 +269,7 @@ import { forEach } from 'mathjs';
             list.push("Timor-Leste");
             list.push("West Bank and Gaza");
             list.push("Tonga")
-
+            list.push("Micronesia")
             let obj_amount = [];
             json.forEach((item,index,Array) => {
                 if(!list.includes(item.Country_Region) && !list.includes(item.Province_State)){
@@ -258,7 +286,6 @@ import { forEach } from 'mathjs';
                                 if(obj.Country_Region == country.Country_Region){
                                     array[key]['Amount']++;
                                 }
-                                    
                             })
                             country_exists = true;
                         }
@@ -270,8 +297,6 @@ import { forEach } from 'mathjs';
                             Amount: 1
                         })
                     }
-
-                    //temp_json.push(item)
                 }
             })
 
