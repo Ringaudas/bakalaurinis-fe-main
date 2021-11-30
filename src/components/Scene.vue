@@ -4,21 +4,21 @@
 
         </div>
         <div class="footer footer-image" id="footer">
-        <nav class="container-fluid" style="height:80px;">
+        <nav class="container-fluid" style="height:80px; z-index:3000;">
             <v-row>
                 <v-col cols="auto">
                     <br>
-                    <a class="navbar-brand" href="#">Navigation Bar</a>
+                    <a class="navbar-brand" href="#">Day {{currentDay}}/{{max}}</a>
                 </v-col>
                 <v-col cols="cols-6">
                     <br>
-                    <input v-model="currentDay" type="range" class="form-range" min="1" v-bind:max="max"  id="customRange2">
+                    <v-slider v-model="currentDay" class="align-center" :min="min" thumb-label v-bind:max="max"></v-slider>
                 </v-col>
                 <v-col cols="auto">
                     <br>
                     <v-dialog
                         transition="dialog-top-transition"
-                        max-width="300"
+                        max-width="450"
                         >
                         <template v-slot:activator="{ on, attrs }">
                             <v-btn
@@ -26,7 +26,7 @@
                                 v-bind="attrs"
                                 v-on="on"
                                 small
-                            >Parameters</v-btn>
+                            >Menu</v-btn>
                         </template>
                         <template v-slot:default="dialog">
                             <v-card>
@@ -34,59 +34,31 @@
                                 color="primary"
                                 dark
                                 >
-                                <v-row>
-                                    <v-col cols="4">
-                                        <v-btn block @click="xMenu = true, yMenu = false, zMenu = false" color="success">
-                                            X
-                                        </v-btn>
-                                    </v-col>
-                                    <v-col cols="4">
-                                        <v-btn block @click="xMenu = false, yMenu = true, zMenu = false" color="success">
-                                            Y
-                                        </v-btn>
-                                    </v-col>
-                                    <v-col cols="4">
-                                        <v-btn block @click="xMenu = false, yMenu = false, zMenu = true" color="success">
-                                            Z
-                                        </v-btn>
-                                    </v-col>
-                                </v-row>
+                                <v-card-title>
+                                    Menu
+                                </v-card-title>
                                 </v-toolbar>
-                                <v-card-text v-if="xMenu">
-                                    <div v-for="(item,index) in selectedFields"
-                                        :key="index">
-                                        <v-switch
-                                            :label="item"
-                                            color="primary"
-                                            :input-value="index == xAxis ? true: false"
-                                            @change="xAxisChange(index)"
-                                            :disabled="index == xAxis || index == yAxis || index == zAxis? true : false"
-                                        ></v-switch>
-                                    </div>
-                                </v-card-text>
-                                <v-card-text v-if="yMenu">
-                                    <div v-for="(item,index) in selectedFields"
-                                        :key="index">
-                                        <v-switch
-                                            :label="item"
-                                            color="primary"
-                                            :input-value="index == yAxis ? true: false"
-                                            @change="yAxisChange(index)"
-                                            :disabled="index == xAxis || index == yAxis || index == zAxis? true : false"
-                                        ></v-switch>
-                                    </div>
-                                </v-card-text>
-                                <v-card-text v-if="zMenu">
-                                    <div v-for="(item,index) in selectedFields"
-                                        :key="index">
-                                        <v-switch
-                                            :label="item"
-                                            color="primary"
-                                            :input-value="index == zAxis ? true: false"
-                                            @change="zAxisChange(index)"
-                                            :disabled="index == xAxis || index == yAxis || index == zAxis? true : false"
-                                        ></v-switch>
-                                    </div>
+                                <v-card-text>
+                                    <v-row>
+                                        <v-col>
+                                            <v-list-item v-on:click.stop>
+                                            <v-switch @change="changeLabels = !changeLabels"></v-switch>
+                                            <v-list-item-title>Labels</v-list-item-title>
+                                            </v-list-item>
+                                        </v-col>
+                                    </v-row>
+                                    <v-row>
+                                        <v-col cols="cols-2">
+                                            <v-list-item v-on:click.stop>
+                                            <v-switch v-model="autoPlay"></v-switch>
+                                            <v-list-item-title>Auto Play</v-list-item-title>
+                                            </v-list-item>
+                                        </v-col>
+                                        <v-col cols="cols-10">
+                                            <br>
+                                            <v-slider v-model="autoPlayInterval" class="align-center" :min="0.1" :step="0.1" thumb-label v-bind:max="3"></v-slider>
+                                        </v-col>
+                                    </v-row>
                                 </v-card-text>
                                 <v-card-actions class="justify-end">
                                 <v-btn
@@ -100,9 +72,42 @@
                 </v-col> 
                 <v-col cols="auto">
                     <br>
-                    <v-btn color="primary" small>
-                        Menu
-                    </v-btn>
+
+                    <v-menu
+                        top
+                        offset-y
+                        >
+                        <template v-slot:activator="{ on, attrs }">
+                            <v-btn
+                            color="primary"
+                            dark
+                            v-bind="attrs"
+                            v-on="on"
+                            small
+                            >
+                            Parameters
+                            </v-btn>
+                        </template>
+
+                        <v-list>
+                            <v-list-item 
+                            v-for="(item,index) in selectedFields"
+                            :key="index"
+                            v-on:click.stop
+                            >
+                                <v-switch
+                                :label="item"
+                                color="primary"
+                                :input-value="selectedFieldsValues[index]"
+                                :disabled="selectedFieldsValues[index] == true && selectedFieldsValuesTrueCount <= 3 ? true : false"
+                                @change="handleParameterSwitch(index)"
+                                ></v-switch>
+                            </v-list-item>
+                            <v-btn text>
+                                Cancel
+                            </v-btn>
+                        </v-list>
+                    </v-menu>
                 </v-col>
             </v-row>
         </nav>
@@ -110,7 +115,7 @@
     <div id="info" v-if="info_box">
         <v-card
         class="mx-auto"
-        color="#000a12"
+        color="primary"
         dark
         max-width="400"
         
@@ -146,7 +151,6 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 import { CSS2DRenderer, CSS2DObject } from 'three/examples/jsm/renderers/CSS2DRenderer.js';
 import OrientationGizmo from "../assets/OrientationGizmo.js";
-
 export default {
     props:{
         selectedFields: Array,
@@ -161,7 +165,12 @@ export default {
                 
             },
             info_box: false,
-            max: '',
+            //max slider value
+            max: 1,
+            //min slider value
+            min: 1,
+            autoPlay: false,
+            autoPlayInterval: 1,
             currentDay: 1,
             lastInfoIndex: 1,
             CheckForUpdate: false,
@@ -171,12 +180,38 @@ export default {
             xAxis: 0,
             yAxis: 1,
             zAxis: 2,
+            changeLabels: false,
+            selectedFieldsValues: [true,true,true,false,false,false],
+            selectedFieldsValuesTrueCount: 3,
+            //Matrix that we get from initial algorythm that we later can reuse for recalculating coordinates when changing parameters
+            new_f: [],
+            //object coordinates
+            coordinates: [],
         }
     },
     mounted(){
         this.initialize()
     },
     methods:{
+        handleParameterSwitch: function(index){
+            let newSelectedFields = [];
+            this.selectedFieldsValues[index] = !this.selectedFieldsValues[index];
+            let counter = 0;
+            this.selectedFieldsValues.forEach((item,index) => {
+                if(item == true){
+                    counter++;
+                    newSelectedFields.push(this.selectedFields[index]);
+                }
+            })
+            this.selectedFieldsValuesTrueCount = counter;
+            for (var object in this.coordinates) delete this.coordinates[object];
+            this.json.forEach((item,index) => {
+                this.coordinates[index] = this.algorythm(item,newSelectedFields)
+            })
+            //set the positions
+            this.CheckForUpdate = true;
+
+        },
         xAxisChange: function(parameter){
             this.xAxis = parameter;
             this.CheckForUpdate = true;
@@ -189,72 +224,52 @@ export default {
             this.zAxis = parameter;
             this.CheckForUpdate = true;
         },
-        initialize: function(){
-            let camera, scene, renderer, labelRenderer, orientationGizmo;
-            let vue = this;
-            let last_id, RequiredTimePassed = 0;
-            var spheres = [];
-            var json = this.json;
-            const SPHERE_RADIUS = 0.27;
-            const clock = new THREE.Clock();
-            const textureLoader = new THREE.TextureLoader();
-            const raycaster = new THREE.Raycaster();
-            const mouse = new THREE.Vector2();
-            var quaternion = new THREE.Quaternion;
-            let sphere;
-            let previousDay = 1;
-
-            var coordinates = [];
-            this.json.forEach(item => {
-                coordinates.push(algorythm(item))
+        algorythm: function(json,selectedFields){
+            var temp_json = [
+            ]
+            //optimize this later
+            json.forEach((key,item) => {
+                var new_object = {
+                    name: "",
+                    fields: []
+                };
+                selectedFields.forEach((item) => {
+                    new_object.fields.push(key[item])
+                    new_object.name = key[this.selectedName[0]]
+                })
+                temp_json.push(new_object);
             })
-            //set range max length
-            this.max = this.json.length;
-            //setting first object for labels
-            var jsonLabels = this.json[0];
-            /////////////////Algorythm////////////////////
-            function algorythm(json){
-                var temp_json = [
-                ]
-                //optimize this later
-                json.forEach((key,item) => {
-                    var new_object = {
-                        name: "",
-                        fields: []
-                    };
-                        vue.selectedFields.forEach((item) => {
-                            new_object.fields.push(key[item])
-                            new_object.name = key[vue.selectedName[0]]
-                        })
-                    temp_json.push(new_object);
+            //standartization
+            let values = [];
+            let mean = [];
+            let std = [];
+            //getting mean and std
+            selectedFields.forEach((item, key) => {
+                values.push([])
+                temp_json.forEach((obj, index) => {
+                    values[key][index] = temp_json[index]['fields'][key];
                 })
-                //standartization
-                let values = [];
-                let mean = [];
-                let std = [];
-                //getting mean and std
-                vue.selectedFields.forEach((item, key) => {
-                    values.push([])
-                    temp_json.forEach((obj, index) => {
-                        values[key][index] = temp_json[index]['fields'][key];
-                    })
-                    mean[key] = math.mean(values[key]);
-                    std[key] = math.std(values[key]);
-                })
+                mean[key] = math.mean(values[key]);
+                std[key] = math.std(values[key]);
+            })
 
-                var new_f = [];
-                temp_json.forEach(item => {
-                    var temp = [];
-                    for(let i = 0; i<vue.selectedFields.length; i++){
-                        temp.push((item.fields[i]-mean[i])/std[i]);
-                    }
-                    new_f.push(temp);
-                })
-                let new_values= [];
+            var new_f = [];
+            temp_json.forEach(item => {
+                var temp = [];
+                for(let i = 0; i<selectedFields.length; i++){
+                    temp.push((item.fields[i]-mean[i])/std[i]);
+                }
+                new_f.push(temp);
+            })
+            this.new_f = new_f;
+            return this.coverianceMatrix(new_f,selectedFields);
+        },
+        coverianceMatrix: function(new_f,selectedFields){
+            let new_values= [];
                 let new_mean = [];
                 let new_std = [];
                 //geting mean and std
-                vue.selectedFields.forEach((item, key) => {
+                selectedFields.forEach((item, key) => {
                     new_values.push([])
                     new_f.forEach((obj, index) => {
                         new_values[key][index] = new_f[index][key];
@@ -264,23 +279,58 @@ export default {
                 })
                 //covariation
                 var covariance_matrix = [];
-                for(let i = 0;i < vue.selectedFields.length;i++)
+                for(let i = 0;i < selectedFields.length;i++)
                 {
-                    covariance_matrix[i] = new Array(vue.selectedFields.length);
-                    for(let j = 0; j < vue.selectedFields.length; j++){
+                    covariance_matrix[i] = new Array(selectedFields.length);
+                    for(let j = 0; j < selectedFields.length; j++){
                         let temp = 0;
                         for(let g = 0; g < new_f.length; g++){
                             temp += (new_f[g][i] - new_mean[i]) * (new_f[g][j] - new_mean[j]);
                         }
-                        covariance_matrix[i][j] = temp/vue.selectedFields.length;
+                        covariance_matrix[i][j] = temp/selectedFields.length;
                     }
                 }
+                //Eigenvectors
                 var temp = math.eigs(covariance_matrix);
                 temp = temp.vectors;
                 var data = math.multiply(new_f, math.transpose(temp));
+                console.log(covariance_matrix)
                 return data;
-            }
-            /////////////////Algorythm///////////////////
+
+        },
+        initialize: function(){
+            //Variables
+            let camera, scene, renderer, labelRenderer, orientationGizmo, controls;
+            let vue = this;
+            let last_id, RequiredTimePassed = Date.now();
+            var spheres = [];
+            var json = this.json;
+            const SPHERE_RADIUS = 0.27;
+            let sphere;
+            let previousDay = 1;
+            let previousSphere;
+            let lastLabels = false;
+            let mouseUp = false;
+            let autoPlayTime = 0;
+            //==========================================================================
+            const clock = new THREE.Clock();
+            const textureLoader = new THREE.TextureLoader();
+            const mouse = new THREE.Vector2();
+            var quaternion = new THREE.Quaternion;
+
+            //get selected fields
+            let newSelectedFields = [];
+            this.selectedFieldsValues.forEach((item,index) => {
+                if(item == true)
+                    newSelectedFields.push(this.selectedFields[index]);
+            })
+            this.json.forEach(Day => {
+                this.coordinates.push(this.algorythm(Day,newSelectedFields))
+            })
+            //set range max length
+            this.max = this.json.length;
+            //setting first object for labels
+            var jsonLabels = this.json[0];
             init();
             animate();
 
@@ -291,7 +341,7 @@ export default {
 
 
                 scene = new THREE.Scene();
-
+                scene.background = new THREE.Color(0x323A44)
                 
 
                 //oriantation gizmo
@@ -315,7 +365,7 @@ export default {
                 //Array(50).fill().forEach(createSphere)
 
                 let counter = 0;
-                coordinates[0].forEach(item => {
+                vue.coordinates[0].forEach(item => {
                     createSphere(item[0], item[1], item[2], counter)
                     counter++;
                 })
@@ -330,12 +380,18 @@ export default {
                 labelRenderer.domElement.style.top = '0px';
                 document.getElementById('canvas').appendChild( labelRenderer.domElement );
 
-
-                const controls = new OrbitControls( camera, labelRenderer.domElement );
+                controls = new OrbitControls( camera, renderer.domElement );
                 controls.minDistance = 1;
                 controls.maxDistance = 50;
-                controls.autoRotate = true;
-                //
+                controls.enablePan = false;
+                controls.enableDamping = true;
+				controls.dampingFactor = 0.5;
+
+                const controls2 = new OrbitControls( camera, labelRenderer.domElement );
+                controls2.minDistance = 1;
+                controls2.maxDistance = 50;
+
+
 
                 window.addEventListener( 'resize', onWindowResize );
                 
@@ -354,15 +410,11 @@ export default {
 
             }
 
-            function onMouseMove( event ) {
-
-                // calculate mouse position in normalized device coordinates
-                // (-1 to +1) for both components
-
+            function mouseClick(event){
                 mouse.x = ( event.clientX / window.innerWidth ) * 2 - 1;
                 mouse.y = - ( event.clientY / window.innerHeight) * 2 + 1;
-
             }
+
 
 
             function setNewInfo(index){
@@ -372,14 +424,21 @@ export default {
 
             function createSphere(x,y,z,index){
                 //create new sphere
-                const geometry = new THREE.SphereGeometry( 0.05, 10, 16);
-                const material = new THREE.MeshBasicMaterial( { color: 0xFF0000 } );
+                const geometry = new THREE.SphereGeometry( 0.05, 15, 20);
+                const material = new THREE.MeshPhongMaterial( { color: 0xFF6347 } );
                 sphere = new THREE.Mesh( geometry, material );
                 //const [x,y,z] = Array(3).fill().map(() => THREE.MathUtils.randFloatSpread(100))
                 sphere.position.set(x,y,z);
-                
+                sphere.receiveShadow = true;
                 scene.add(sphere)
                 //text for Sphere
+                spheres.push(sphere);
+            }
+
+            function addLabel(sphere, index){
+                //add color
+                sphere.material.color.set( 0x7f0000 );
+                //
                 const sphereDiv = document.createElement( 'div' );
                 sphereDiv.className = 'label';
                 sphereDiv.textContent = jsonLabels[index]['Country_Region'];
@@ -387,38 +446,53 @@ export default {
                 const sphereLabel = new CSS2DObject( sphereDiv );
                 sphereLabel.position.set( 0, SPHERE_RADIUS-0.2, 0 );
                 sphere.add( sphereLabel);
-                spheres.push(sphere);
             }
 
-
             function animate() {
-                const elapsed = clock.getElapsedTime();
-                raycaster.setFromCamera( mouse, camera );
-                // calculate objects intersecting the picking ray
-
-                orientationGizmo.update();
-                
-                const intersects = raycaster.intersectObjects( scene.children );    
-                if(intersects.length > 0){
-                        intersects[ 0 ].object.material.color.set( 0xd5eb34 );
-                        vue.info_box = true;
-                        let keys_list = [];
-                        spheres.forEach((object, key) => {
-                            let tempTime =  (new Date().getTime() / 1000) - RequiredTimePassed;
-                            
-                            if(intersects[0].object == object && last_id != key && !keys_list.includes(key) && tempTime >= 1)
-                            {
-                                vue.lastInfoIndex = key;
-                                setNewInfo(key);
-                                last_id = key;
-                                keys_list.push(key);
-                                RequiredTimePassed = new Date().getTime() / 1000;
-                            }
-                        })
+                const d = new Date();
+                if(vue.autoPlay == true && d.getTime()-autoPlayTime>vue.autoPlayInterval*1000){
+                    if(vue.currentDay == vue.max)
+                        vue.currentDay = 1;
+                    else
+                        vue.currentDay++;
+                    autoPlayTime = d.getTime();
                 }
 
-                requestAnimationFrame( animate );
-                window.addEventListener( 'click', onMouseMove, true);
+                orientationGizmo.update();
+                canvas.addEventListener( 'mouseup', function(){mouseUp = true})
+                if(mouseUp){
+                    canvas.addEventListener( 'click', mouseClick, false);
+                    mouseUp = false;
+                    //anti spam
+                    let raycaster = new THREE.Raycaster()
+                    raycaster.setFromCamera( mouse, camera );
+                    var intersects = raycaster.intersectObjects( scene.children );    
+                    //if any objects were clicked
+                    if(intersects.length > 0){
+                        vue.info_box = true;
+                        //go through all spheres find the one that matches first hit target
+                        spheres.forEach((object, key) => {
+                            if(intersects[0].object == object)
+                            {
+                                if(!vue.changeLabels){
+                                    if(previousSphere){
+                                        previousSphere.remove(previousSphere.children[0])
+                                        previousSphere.material.color.set( 0xFF6347 );
+                                    }
+                                    addLabel(object,key);
+                                }
+                                vue.lastInfoIndex = key;
+                                //setting new info box
+                                setNewInfo(key);
+                                //add label to object
+
+                                previousSphere = object;
+                                RequiredTimePassed = Date.now();
+                            }
+                        })
+                    }
+                }
+                
 
                 if( vue.currentDay != previousDay || vue.CheckForUpdate == true){
                     changeDay(vue.currentDay)
@@ -426,18 +500,46 @@ export default {
                     vue.CheckForUpdate = false;
                 }
 
+                if(vue.changeLabels != lastLabels){
+                    if(vue.changeLabels == true){
+                        if(previousSphere){
+                            //remove single clickable label if it exists
+                            previousSphere.remove(previousSphere.children[0])
+                            previousSphere.material.color.set( 0xFF6347 );
+                        }
+                        spheres.forEach((sphere,key,array) => {
+                            const sphereDiv = document.createElement( 'div' );
+                            sphereDiv.className = 'label';
+                            sphereDiv.textContent = jsonLabels[key]['Country_Region'];
+                            sphereDiv.style.marginTop = '-1em';
+                            const sphereLabel = new CSS2DObject( sphereDiv );
+                            sphereLabel.position.set( 0, SPHERE_RADIUS-0.2, 0 );
+                            array[key].add(sphereLabel);
+                        })
+                        lastLabels = vue.changeLabels;
+                    }
+                    else{
+                        spheres.forEach((sphere,key,array) => {
+                            array[key].remove(array[key].children[0]);
+                        })
+                        if(previousSphere){
+                            //remove single clickable label if it exists
+                            previousSphere.remove(previousSphere.children[0])
+                            previousSphere.material.color.set( 0xFF6347 );
+                        }
+                        lastLabels = vue.changeLabels;
+                    }
+                }
                 renderer.render( scene, camera );
                 labelRenderer.render( scene, camera );
-
-                // spheres.forEach(function(item, index, array) {
-                //     item.position.y += 0.05
-                // }) 
+                requestAnimationFrame( animate );
 
             }
 
+
             function changeDay(index){
                 spheres.forEach((sphere,key,array) =>{
-                    array[key].position.set(coordinates[index-1][key][vue.xAxis],coordinates[index-1][key][vue.yAxis],coordinates[index-1][key][vue.zAxis])
+                    array[key].position.set(vue.coordinates[index-1][key][vue.xAxis],vue.coordinates[index-1][key][vue.yAxis],vue.coordinates[index-1][key][vue.zAxis])
                 })
                 setNewInfo(vue.lastInfoIndex)
             }
@@ -459,6 +561,7 @@ canvas{
     left: 0;
 }
 
+
 .label {
     color: #FFF;
     font-family: sans-serif;
@@ -469,12 +572,9 @@ canvas{
 #container {
     position: relative;
   }
-  #container canvas, #overlay {
-    position: absolute;
-  }
-  canvas {
-    border: 1px solid black;
-  }
+#container canvas, #overlay {
+position: absolute;
+}
 
 .footer {
     position: fixed;
