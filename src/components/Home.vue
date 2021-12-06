@@ -1,18 +1,5 @@
 <template>
     <v-row>
-        <v-overlay
-          :absolute="true"
-          :opacity="1"
-          v-model="overlay"
-          v-bind="overlay"
-        >
-            <v-progress-circular
-                :size="70"
-                :width="7"
-                color="purple"
-                indeterminate
-            ></v-progress-circular>
-        </v-overlay>
         <v-col
         cols="12"
         sm="6"
@@ -144,14 +131,12 @@ import { forEach } from 'mathjs';
         files: [],
         loader: null,
         loading4: false,
-        overlay:false,
         max_values: [],
         min_values: [],
       }
     },
     methods:{
         handleDemo(){
-            this.overlay=true;
             //adding parameters
             this.selectedFields.push('Confirmed');
             this.selectedFields.push('Active');
@@ -210,8 +195,6 @@ import { forEach } from 'mathjs';
             //activate Canvas
 
             this.showCanvas = true;
-            this.overlay = false;
-
         },
         originalJsonRework(){
             //getting rid of unneccesary fields
