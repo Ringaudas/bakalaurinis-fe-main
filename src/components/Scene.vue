@@ -41,7 +41,7 @@
                                 <v-card-text>
                                     <v-row>
                                         <v-col>
-                                            <v-list-item v-on:click.stop>
+                                            <v-list-item>
                                             <v-switch @change="changeLabels = !changeLabels"></v-switch>
                                             <v-list-item-title>Labels</v-list-item-title>
                                             </v-list-item>
@@ -49,7 +49,7 @@
                                     </v-row>
                                     <v-row>
                                         <v-col cols="cols-2">
-                                            <v-list-item v-on:click.stop>
+                                            <v-list-item>
                                             <v-switch v-model="autoPlay"></v-switch>
                                             <v-list-item-title>Auto Play</v-list-item-title>
                                             </v-list-item>
@@ -57,6 +57,14 @@
                                         <v-col cols="cols-10">
                                             <br>
                                             <v-slider v-model="autoPlayInterval" class="align-center" :min="0.1" :step="0.1" thumb-label v-bind:max="3"></v-slider>
+                                        </v-col>
+                                    </v-row>
+                                    <v-row>
+                                        <v-col>
+                                            <v-list-item>
+                                            <v-switch v-model="algorythmState" @change="handleAlgorythmStateChange()"></v-switch>
+                                            <v-list-item-title>Clustering</v-list-item-title>
+                                            </v-list-item>
                                         </v-col>
                                     </v-row>
                                 </v-card-text>
@@ -70,7 +78,7 @@
                         </template>
                     </v-dialog>
                 </v-col> 
-                <v-col cols="auto">
+                <v-col cols="auto" v-if="algorythmState">
                     <br>
 
                     <v-menu
@@ -99,7 +107,7 @@
                                 :label="item"
                                 color="primary"
                                 :input-value="selectedFieldsValues[index]"
-                                :disabled="selectedFieldsValues[index] == true && selectedFieldsValuesTrueCount <= 3 ? true : false"
+                                :disabled="selectedFieldsValues[index] == true && selectedFieldsValuesTrueCount <= 2 ? true : false"
                                 @change="handleParameterSwitch(index)"
                                 ></v-switch>
                             </v-list-item>
@@ -109,6 +117,101 @@
                         </v-list>
                     </v-menu>
                 </v-col>
+                <v-col cols="auto" v-if="!algorythmState">
+                    <br>
+                    <v-dialog
+                        transition="dialog-top-transition"
+                        max-width="350"
+                        >
+                        <template v-slot:activator="{ on, attrs }">
+                            <v-btn
+                                color="primary"
+                                v-bind="attrs"
+                                v-on="on"
+                                small
+                            >Coordinates</v-btn>
+                        </template>
+                        <template v-slot:default="dialog">
+                            <v-card>
+                                <v-toolbar
+                                color="primary"
+                                dark
+                                max-width="350"
+                                >
+                                <v-card-title style="width:100%;">
+                                        <v-row>
+                                            <v-col cols="4">
+                                                <v-btn @click="xMenu = true; yMenu=false; zMenu=false;" v-bind:class="xMenu == true ? 'success' : ''">
+                                                    X
+                                                </v-btn>
+                                            </v-col>
+                                            <v-col cols="4">
+                                                <v-btn @click="xMenu = false; yMenu=true; zMenu=false;" v-bind:class="yMenu == true ? 'success' : ''">
+                                                    Y
+                                                </v-btn>
+                                            </v-col>
+                                            <v-col cols="4">
+                                                <v-btn @click="xMenu = false; yMenu=false; zMenu=true;" v-bind:class="zMenu == true ? 'success' : ''">
+                                                    Z
+                                                </v-btn>
+                                            </v-col>
+                                        </v-row>
+                                </v-card-title>
+                                </v-toolbar>
+                                <v-card-text>
+                                    <v-col v-if="xMenu">
+                                        <div v-for="(item,index) in selectedFields" :key="index">
+                                            <v-switch 
+                                            v-if="index != yAxis && index != zAxis"
+                                            :label="item"
+                                            color="primary"
+                                            :input-value="index == xAxis ? true : false"
+                                            :disabled="index == xAxis ? true : false"
+                                            @change="xAxis=index; CheckForUpdate=true"
+                                            >
+
+                                            </v-switch>
+                                        </div>
+                                    </v-col>
+                                    <v-col v-if="yMenu">
+                                        <div v-for="(item,index) in selectedFields" :key="index">
+                                            <v-switch 
+                                            v-if="index != xAxis && index != zAxis"
+                                            :label="item"
+                                            color="primary"
+                                            :input-value="index == yAxis ? true : false"
+                                            :disabled="index == yAxis ? true : false"
+                                            @change="yAxis=index; CheckForUpdate=true"
+                                            >
+
+                                            </v-switch>
+                                        </div>
+                                    </v-col>
+                                    <v-col v-if="zMenu">
+                                        <div v-for="(item,index) in selectedFields" :key="index">
+                                            <v-switch 
+                                            v-if="index != xAxis && index != yAxis"
+                                            :label="item"
+                                            color="primary"
+                                            :input-value="index == zAxis ? true : false"
+                                            :disabled="index == zAxis ? true : false"
+                                            @change="zAxis=index; CheckForUpdate=true"
+                                            >
+
+                                            </v-switch>
+                                        </div>
+                                    </v-col>
+                                </v-card-text>
+                                <v-card-actions class="justify-end">
+                                <v-btn
+                                    text
+                                    @click="dialog.value = false"
+                                >Close</v-btn>
+                                </v-card-actions>
+                            </v-card>
+                        </template>
+                    </v-dialog>
+                </v-col> 
             </v-row>
         </nav>
       </div>
@@ -156,7 +259,9 @@ export default {
         selectedFields: Array,
         selectedName: Array,
         json: Array,
-        original_json: Array
+        original_json: Array,
+        max_values: Array,
+        min_values: Array,
     },
     data()  {
         return{
@@ -181,18 +286,58 @@ export default {
             yAxis: 1,
             zAxis: 2,
             changeLabels: false,
+            //Regular as in not used for clustering
             selectedFieldsValues: [true,true,true,false,false,false],
             selectedFieldsValuesTrueCount: 3,
             //Matrix that we get from initial algorythm that we later can reuse for recalculating coordinates when changing parameters
             new_f: [],
             //object coordinates
             coordinates: [],
+            algorythmState: true,
         }
     },
     mounted(){
         this.initialize()
     },
     methods:{
+        handleAlgorythmStateChange: function(){
+            //if algorythm state has changed, normalize the data and dont use the algorythm
+            for (var object in this.coordinates) delete this.coordinates[object];
+            if(this.algorythmState == false){
+                this.json.forEach((item,index) => {
+                    this.coordinates[index] = this.normalizationMethod(item,index)
+                })
+            }
+            else{
+                this.xAxis=0;
+                this.yAxis=1;
+                this.zAxis=2;
+                let newSelectedFields = [];
+                this.selectedFieldsValues.forEach((item,index) => {
+                    if(item == true){
+                        newSelectedFields.push(this.selectedFields[index]);
+                    }
+                })
+
+                this.json.forEach((item,index) => {
+                    this.coordinates[index] = this.algorythm(item,newSelectedFields)
+                })
+            }
+            this.CheckForUpdate = true;
+        },
+        normalizationMethod: function(json, n){
+            var temp_json = [];
+            //range
+            var a = 0;
+            var b = 1;
+            json.forEach((item,index,array) => {
+                temp_json[index] = new Array(this.selectedFields.length).fill(0);
+                this.selectedFields.forEach((obj,key) => {
+                    temp_json[index][key] = a+(((json[index][obj]-this.min_values[n][key])*(b-a))/this.max_values[n][key]-this.min_values[n][key]);
+                })
+            })
+            return temp_json;
+        },
         handleParameterSwitch: function(index){
             let newSelectedFields = [];
             this.selectedFieldsValues[index] = !this.selectedFieldsValues[index];
@@ -204,6 +349,7 @@ export default {
                 }
             })
             this.selectedFieldsValuesTrueCount = counter;
+            //deleting old coordinates
             for (var object in this.coordinates) delete this.coordinates[object];
             this.json.forEach((item,index) => {
                 this.coordinates[index] = this.algorythm(item,newSelectedFields)
@@ -252,7 +398,6 @@ export default {
                 mean[key] = math.mean(values[key]);
                 std[key] = math.std(values[key]);
             })
-
             var new_f = [];
             temp_json.forEach(item => {
                 var temp = [];
@@ -294,7 +439,6 @@ export default {
                 var temp = math.eigs(covariance_matrix);
                 temp = temp.vectors;
                 var data = math.multiply(new_f, math.transpose(temp));
-                console.log(covariance_matrix)
                 return data;
 
         },
@@ -324,9 +468,11 @@ export default {
                 if(item == true)
                     newSelectedFields.push(this.selectedFields[index]);
             })
-            this.json.forEach(Day => {
+
+            this.json.forEach(Day => {  
                 this.coordinates.push(this.algorythm(Day,newSelectedFields))
             })
+
             //set range max length
             this.max = this.json.length;
             //setting first object for labels
@@ -491,15 +637,21 @@ export default {
                             }
                         })
                     }
-                }
-                
-
+                }               
+                //If day has changed or update is required
                 if( vue.currentDay != previousDay || vue.CheckForUpdate == true){
                     changeDay(vue.currentDay)
                     previousDay = vue.currentDay;
                     vue.CheckForUpdate = false;
                 }
 
+                //if info box is closed, remove label and change back the color
+                if(vue.info_box == false && previousSphere && !vue.changeLabels){
+                    previousSphere.remove(previousSphere.children[0])
+                    previousSphere.material.color.set( 0xFF6347 );
+                }
+
+                //Show all Labels
                 if(vue.changeLabels != lastLabels){
                     if(vue.changeLabels == true){
                         if(previousSphere){
@@ -538,6 +690,16 @@ export default {
 
 
             function changeDay(index){
+                if(vue.selectedFieldsValuesTrueCount > 2){
+                    spheres.forEach((sphere,key,array) =>{
+                        array[key].position.set(vue.coordinates[index-1][key][vue.xAxis],vue.coordinates[index-1][key][vue.yAxis],vue.coordinates[index-1][key][vue.zAxis])
+                    })
+                }
+                else{
+                    spheres.forEach((sphere,key,array) =>{
+                        array[key].position.set(vue.coordinates[index-1][key][vue.xAxis],vue.coordinates[index-1][key][vue.yAxis],0)
+                    })
+                }
                 spheres.forEach((sphere,key,array) =>{
                     array[key].position.set(vue.coordinates[index-1][key][vue.xAxis],vue.coordinates[index-1][key][vue.yAxis],vue.coordinates[index-1][key][vue.zAxis])
                 })
