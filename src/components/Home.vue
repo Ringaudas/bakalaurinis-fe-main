@@ -1,5 +1,19 @@
 <template>
     <v-row>
+        <v-overlay
+          :absolute="true"
+          :opacity="1"
+          :value="overlay"
+        >
+            <v-progress-circular
+            :size="70"
+            :width="8"
+            color="purple"
+            indeterminate
+            style="margin: 1rem;"
+            >
+            </v-progress-circular>
+        </v-overlay>
         <v-col
         cols="12"
         sm="6"
@@ -48,7 +62,7 @@
                     </v-col>
 
                     <v-col cols="8" align="end">
-                        <v-btn elevation="2" v-on:click="handleDemo()">
+                        <v-btn elevation="2" v-on:click="() => {overlay=true; handleDemo()}">
                             Demo version
                         </v-btn>
                     </v-col>
@@ -133,68 +147,73 @@ import { forEach } from 'mathjs';
         loading4: false,
         max_values: [],
         min_values: [],
+        overlay:false,
       }
     },
     methods:{
         handleDemo(){
-            //adding parameters
-            this.selectedFields.push('Confirmed');
-            this.selectedFields.push('Active');
-            this.selectedFields.push('Deaths');
-            this.selectedFields.push('Recovered');
+            this.overlay=true;
+            setTimeout(() => {
+                this.selectedFields.push('Confirmed');
+                this.selectedFields.push('Active');
+                this.selectedFields.push('Deaths');
+                this.selectedFields.push('Recovered');
 
-            //add a name parameter
-            this.selectedName.push('Country_Region');
+                //add a name parameter
+                this.selectedName.push('Country_Region');
 
-            let vue = this;
-            this.json.push(require('../assets/2021-01-01.json'))
-            this.json.push(require('../assets/2021-01-02.json'))
-            this.json.push(require('../assets/2021-01-03.json'))
-            this.json.push(require('../assets/2021-01-04.json'))
-            this.json.push(require('../assets/2021-01-05.json'))
-            this.json.push(require('../assets/2021-01-06.json'))
-            this.json.push(require('../assets/2021-01-07.json'))
-            this.json.push(require('../assets/2021-01-08.json'))
-            this.json.push(require('../assets/2021-01-09.json'))
-            this.json.push(require('../assets/2021-01-10.json'))
-            this.json.push(require('../assets/2021-01-11.json'))
-            this.json.push(require('../assets/2021-01-12.json'))
-            this.json.push(require('../assets/2021-01-13.json'))
-            this.json.push(require('../assets/2021-01-14.json'))
-            this.json.push(require('../assets/2021-01-15.json'))
-            this.json.push(require('../assets/2021-01-16.json'))
-            this.json.push(require('../assets/2021-01-17.json'))
-            this.json.push(require('../assets/2021-01-18.json'))
-            this.json.push(require('../assets/2021-01-19.json'))
-            this.json.push(require('../assets/2021-01-20.json'))
-            this.json.push(require('../assets/2021-01-21.json'))
-            this.json.push(require('../assets/2021-01-22.json'))
-            this.json.push(require('../assets/2021-01-23.json'))
-            this.json.push(require('../assets/2021-01-24.json'))
-            this.json.push(require('../assets/2021-01-25.json'))
-            this.json.push(require('../assets/2021-01-26.json'))
-            this.json.push(require('../assets/2021-01-27.json'))
-            this.json.push(require('../assets/2021-01-28.json'))
-            this.json.push(require('../assets/2021-01-29.json'))
-            this.json.push(require('../assets/2021-01-30.json'))
-            this.json.push(require('../assets/2021-01-31.json'))
-            //filter
-            this.json.forEach(function(item,index,array) {
-                array[index] = vue.filterData(item, index)
-            })
-            this.original_json = JSON.parse(JSON.stringify(this.json))
-            this.originalJsonRework();
-            //normalize
-            this.json.forEach(function(item,index,array) {
-                array[index] = vue.normalizeData(item,index)
-            })
+                let vue = this;
+                this.json.push(require('../assets/2021-01-01.json'))
+                this.json.push(require('../assets/2021-01-02.json'))
+                this.json.push(require('../assets/2021-01-03.json'))
+                this.json.push(require('../assets/2021-01-04.json'))
+                this.json.push(require('../assets/2021-01-05.json'))
+                this.json.push(require('../assets/2021-01-06.json'))
+                this.json.push(require('../assets/2021-01-07.json'))
+                this.json.push(require('../assets/2021-01-08.json'))
+                this.json.push(require('../assets/2021-01-09.json'))
+                this.json.push(require('../assets/2021-01-10.json'))
+                this.json.push(require('../assets/2021-01-11.json'))
+                this.json.push(require('../assets/2021-01-12.json'))
+                this.json.push(require('../assets/2021-01-13.json'))
+                this.json.push(require('../assets/2021-01-14.json'))
+                this.json.push(require('../assets/2021-01-15.json'))
+                this.json.push(require('../assets/2021-01-16.json'))
+                this.json.push(require('../assets/2021-01-17.json'))
+                this.json.push(require('../assets/2021-01-18.json'))
+                this.json.push(require('../assets/2021-01-19.json'))
+                this.json.push(require('../assets/2021-01-20.json'))
+                this.json.push(require('../assets/2021-01-21.json'))
+                this.json.push(require('../assets/2021-01-22.json'))
+                this.json.push(require('../assets/2021-01-23.json'))
+                this.json.push(require('../assets/2021-01-24.json'))
+                this.json.push(require('../assets/2021-01-25.json'))
+                this.json.push(require('../assets/2021-01-26.json'))
+                this.json.push(require('../assets/2021-01-27.json'))
+                this.json.push(require('../assets/2021-01-28.json'))
+                this.json.push(require('../assets/2021-01-29.json'))
+                this.json.push(require('../assets/2021-01-30.json'))
+                this.json.push(require('../assets/2021-01-31.json'))
+                //filter
+                this.json.forEach(function(item,index,array) {
+                    array[index] = vue.filterData(item, index)
+                })
+                this.original_json = JSON.parse(JSON.stringify(this.json))
+                this.originalJsonRework();
+                //normalize
+                this.json.forEach(function(item,index,array) {
+                    array[index] = vue.normalizeData(item,index)
+                })
 
-            //adding two new parameters which didnt need normalization
-            this.selectedFields.push('Incident_Rate');
-            this.selectedFields.push('Case_Fatality_Ratio');
-            //activate Canvas
+                //adding two new parameters which didnt need normalization
+                this.selectedFields.push('Incident_Rate');
+                this.selectedFields.push('Case_Fatality_Ratio');
+                this.overlay = false;
+                this.showCanvas = true;
+        }, 1000)
 
-            this.showCanvas = true;
+
+
         },
         originalJsonRework(){
             //getting rid of unneccesary fields
@@ -206,6 +225,7 @@ import { forEach } from 'mathjs';
                     delete arr[index]['Last_Update'];
                     delete arr[index]['Lat'];
                     delete arr[index]['Long_'];
+                    delete arr[index]['Combined_Key'];
                 })
             })
         },

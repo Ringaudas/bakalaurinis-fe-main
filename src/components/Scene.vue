@@ -40,7 +40,7 @@
                                 </v-toolbar>
                                 <v-card-text>
                                     <v-row>
-                                        <v-col>
+                                        <v-col style="padding-bottom:0px;">
                                             <v-list-item>
                                             <v-switch @change="changeLabels = !changeLabels"></v-switch>
                                             <v-list-item-title>Labels</v-list-item-title>
@@ -62,8 +62,16 @@
                                     <v-row>
                                         <v-col>
                                             <v-list-item>
-                                            <v-switch v-model="algorythmState" @change="handleAlgorythmStateChange()"></v-switch>
-                                            <v-list-item-title>Clustering</v-list-item-title>
+                                                <v-switch v-model="algorythmState" @change="handleAlgorythmStateChange()"></v-switch>
+                                                <v-list-item-title>Clustering</v-list-item-title>
+                                            </v-list-item>
+                                        </v-col>
+                                    </v-row>
+                                    <v-row>
+                                        <v-col>
+                                            <v-list-item>
+                                                <v-switch v-model="TwoDimensionState" @change="CheckForUpdate = true;"></v-switch>
+                                                <v-list-item-title>2D</v-list-item-title>
                                             </v-list-item>
                                         </v-col>
                                     </v-row>
@@ -107,7 +115,7 @@
                                 :label="item"
                                 color="primary"
                                 :input-value="selectedFieldsValues[index]"
-                                :disabled="selectedFieldsValues[index] == true && selectedFieldsValuesTrueCount <= 2 ? true : false"
+                                :disabled="selectedFieldsValues[index] == true && selectedFieldsValuesTrueCount <= 3 ? true : false"
                                 @change="handleParameterSwitch(index)"
                                 ></v-switch>
                             </v-list-item>
@@ -235,7 +243,7 @@
         <v-card-text class="font-weight-bold" style="font-size:12px; padding-bottom:0; padding-left:0;">
         <v-col style="padding:0;">
             <ul id="example-1">
-                <li v-for="(item, index) in object_info" :key="item['Conmbined_Key']">
+                <li v-for="(item, index) in object_info" :key="item['Country_Region']">
                     {{ index }}: {{item}}
                 </li>
             </ul>
@@ -294,6 +302,7 @@ export default {
             //object coordinates
             coordinates: [],
             algorythmState: true,
+            TwoDimensionState: false,
         }
     },
     mounted(){
@@ -690,7 +699,7 @@ export default {
 
 
             function changeDay(index){
-                if(vue.selectedFieldsValuesTrueCount > 2){
+                if(!vue.TwoDimensionState){
                     spheres.forEach((sphere,key,array) =>{
                         array[key].position.set(vue.coordinates[index-1][key][vue.xAxis],vue.coordinates[index-1][key][vue.yAxis],vue.coordinates[index-1][key][vue.zAxis])
                     })
@@ -700,9 +709,6 @@ export default {
                         array[key].position.set(vue.coordinates[index-1][key][vue.xAxis],vue.coordinates[index-1][key][vue.yAxis],0)
                     })
                 }
-                spheres.forEach((sphere,key,array) =>{
-                    array[key].position.set(vue.coordinates[index-1][key][vue.xAxis],vue.coordinates[index-1][key][vue.yAxis],vue.coordinates[index-1][key][vue.zAxis])
-                })
                 setNewInfo(vue.lastInfoIndex)
             }
         }
@@ -757,6 +763,11 @@ position: absolute;
 }
 .btn-primary{
     margin-left:5px;
+}
+
+.col{
+    padding-top:0px !important;
+    padding-bottom:0px !important;
 }
 
 
